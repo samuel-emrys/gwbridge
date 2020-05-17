@@ -1,10 +1,13 @@
 import requests
+import os
 
 # import pypandoc
 import datetime
 from requests_oauthlib import OAuth1
 from urllib.parse import parse_qs
 import json
+import shutil
+from gwbridge import rootdir
 
 
 def publish(**kwargs):
@@ -41,9 +44,7 @@ def publish(**kwargs):
 
 
 def construct_url(**kwargs):
-    url = "{}/{}/{}".format(
-        kwargs.get("base_url"), kwargs.get("api_version"), kwargs.get("endpoint")
-    )
+    url = "{}/{}/{}".format(kwargs.get("base_url"), kwargs.get("api_version"), "posts")
     return url
 
 
@@ -69,7 +70,7 @@ def authenticate(**kwargs):
         client_key=kwargs["client_key"],
         client_secret=kwargs["client_secret"],
         resource_owner_key=resource_owner_key,
-        resource_owner_Secret=resource_owner_secret,
+        resource_owner_secret=resource_owner_secret,
         verifier=verifier,
     )
 
@@ -79,7 +80,7 @@ def authenticate(**kwargs):
     resource_owner_secret = credentials.get("oauth_token_secret")[0]
 
     print("{:25}{}".format("Client key", kwargs["client_key"]))
-    print("{:25}{}".format("Client secret", kwargs["client_key"]))
+    print("{:25}{}".format("Client secret", kwargs["client_secret"]))
     print("{:25}{}".format("Resource owner key", resource_owner_key))
     print("{:25}{}".format("Resource owner secret", resource_owner_secret))
 
@@ -101,3 +102,54 @@ def discover_auth_endpoints(**kwargs):
     }
 
     return urls
+
+
+def init(**kwargs):
+    default_config_dir = os.path.join(rootdir, "config")
+    deploy_dir = ".deploy"
+
+    try:
+        os.makedirs(deploy_dir, exist_ok=False)
+    except FileExistsError:
+        rewrite = (
+            input(
+                "This project has already been initialised! Reset your configuration and start again? (y/[n]): "
+            )
+            or "n"
+        )
+        if rewrite.lower() in {"n", "no"}:
+            exit(0)
+
+    with open(os.path.join(default_config_dir, "config-default.json"), "r") as f:
+        config = json.loads(f.read())
+
+    # Prompt user to update configuration settings
+    while not config.get("base_url", None):
+        config["base_url"] = input(
+            "Enter the base URL of the wordpress blog to update (required): "
+        )
+        if not config.get("base_url"):
+            print("You must enter a base URL.")
+
+    config["api_version"] = input(
+        "Enter the version of the WPI you wish to use [{}]: ".format(
+            config.get("api_version")
+        )
+    ) or config.get("api_version")
+
+    # Write the updated configuration to the local repository
+    with open(os.path.join(deploy_dir, "config.json"), "w") as f:
+        f.write(json.dumps(config, indent=4))
+
+    print(
+        "Configuration file created at {}".format(
+            os.path.join(deploy_dir, "config.json")
+        )
+    )
+    shutil.copy(
+        os.path.join(default_config_dir, "metadata-default.json"),
+        os.path.join(deploy_dir, "metadata.json"),
+    )
+    print(
+        "Metadata file created at {}".format(os.path.join(deploy_dir, "metadata.json"))
+    )
