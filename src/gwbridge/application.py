@@ -7,28 +7,32 @@ from requests_oauthlib import OAuth1
 from urllib.parse import parse_qs
 import json
 import shutil
-from gwbridge import rootdir
+from gwbridge import ROOT_DIR
+from gwbridge import METADATA_FILE
+from gwbridge import CONFIG_FILE
 
 
 def publish(**kwargs):
 
+    config = parse_args(**kwargs)
+
     oauth = OAuth1(
-        client_key=kwargs["client_key"],
-        client_secret=kwargs["client_secret"],
-        resource_owner_key=kwargs["resource_owner_key"],
-        resource_owner_secret=kwargs["resource_owner_secret"],
+        client_key=config.get("client_key", None),
+        client_secret=config.get("client_secret", None),
+        resource_owner_key=config.get("resource_owner_key", None),
+        resource_owner_secret=config.get("resource_owner_secret", None),
     )
 
-    if kwargs.get("convert", None):
+    if config.get("convert", None):
         pass
         # filename = kwargs.get("file", "").split(".")[0]
         # target_filename = filename + ".html"
         # content = pypandoc.convert_file(kwargs.get("file", ""), 'html', outputfile=target_filename)
     else:
-        with open(kwargs["file"], "r") as f:
+        with open(config.get("file"), "r") as f:
             content = f.read()
 
-    with open(".metadata.json", "r") as f:
+    with open(METADATA_FILE, "r") as f:
         metadata = json.loads(f.read())
 
     payload = {
@@ -37,14 +41,29 @@ def publish(**kwargs):
         **metadata,
     }
 
-    url = construct_url(**kwargs)
+    url = construct_url(**config)
     response = requests.post(url, data=payload, auth=oauth)
 
     return response.status_code
 
 
-def construct_url(**kwargs):
-    url = "{}/{}/{}".format(kwargs.get("base_url"), kwargs.get("api_version"), "posts")
+def parse_args(**kwargs):
+
+    if os.path.exists(CONFIG_FILE):
+        with open(CONFIG_FILE, "r") as f:
+            config = json.loads(f.read())
+    else:
+        config = {}
+
+    for key, value in kwargs.items():
+        if value:
+            config[key] = value
+
+    return config
+
+
+def construct_url(base_url, api_version):
+    url = "{}/{}/{}".format(base_url, api_version, "posts")
     return url
 
 
@@ -105,7 +124,7 @@ def discover_auth_endpoints(**kwargs):
 
 
 def init(**kwargs):
-    default_config_dir = os.path.join(rootdir, "config")
+    default_config_dir = os.path.join(ROOT_DIR, "config")
     deploy_dir = ".deploy"
 
     try:
@@ -136,6 +155,10 @@ def init(**kwargs):
             config.get("api_version")
         )
     ) or config.get("api_version")
+
+    config["file"] = input(
+        "Enter the name of the file to publish [{}]: ".format(config.get("file"))
+    ) or config.get("file")
 
     # Write the updated configuration to the local repository
     with open(os.path.join(deploy_dir, "config.json"), "w") as f:
