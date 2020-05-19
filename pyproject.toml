@@ -19,6 +19,8 @@ pudb = "^2019.2"
 black = "^19.10b0"
 flake8 = "^3.8.1"
 pre-commit = "^2.4.0"
+pytest-mock = "^3.1.0"
+mock = "^4.0.2"
 
 [tool.poetry.scripts]
 gwbridge = 'gwbridge.cli:cli'
