@@ -1,8 +1,7 @@
 import requests
 import os
-
-# import pypandoc
 import datetime
+import pypandoc
 from requests_oauthlib import OAuth1
 from urllib.parse import parse_qs
 import json
@@ -10,6 +9,7 @@ import shutil
 from gwbridge import ROOT_DIR
 from gwbridge import METADATA_FILE
 from gwbridge import CONFIG_FILE
+from bs4 import BeautifulSoup
 
 
 def publish(**kwargs):
@@ -23,21 +23,17 @@ def publish(**kwargs):
         resource_owner_secret=config.get("resource_owner_secret", None),
     )
 
-    if config.get("convert", None):
-        pass
-        # filename = kwargs.get("file", "").split(".")[0]
-        # target_filename = filename + ".html"
-        # content = pypandoc.convert_file(kwargs.get("file", ""), 'html', outputfile=target_filename)
-    else:
-        with open(config.get("file"), "r") as f:
-            content = f.read()
+    with open(config.get("file"), "r") as f:
+        data = f.read()
+
+    document = parse_document(data)
 
     with open(METADATA_FILE, "r") as f:
         metadata = json.loads(f.read())
 
     payload = {
         "date": datetime.datetime.now(),
-        "content": content,
+        **document,
         **metadata,
     }
 
@@ -45,6 +41,24 @@ def publish(**kwargs):
     response = requests.post(url, data=payload, auth=oauth)
 
     return response.status_code
+
+
+def parse_document(data):
+    html = pypandoc.convert_text(data, "html", format="md")
+    soup = BeautifulSoup(html, "html.parser")
+
+    document = extract_title(soup)
+
+    return document
+
+
+def extract_title(soup):
+
+    title = soup.h1.string
+    soup.h1.extract()
+    content = soup.prettify(formatter="html5")
+
+    return {"title": title, "content": content}
 
 
 def parse_args(**kwargs):
