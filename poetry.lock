@@ -419,6 +419,22 @@ security = ["pyOpenSSL (>=0.14)", "cryptography (>=1.3.4)"]
 socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7)", "win-inet-pton"]
 
 [[package]]
+category = "dev"
+description = "Mock out responses from the requests package"
+name = "requests-mock"
+optional = false
+python-versions = "*"
+version = "1.8.0"
+
+[package.dependencies]
+requests = ">=2.3,<3"
+six = "*"
+
+[package.extras]
+fixture = ["fixtures"]
+test = ["fixtures", "mock", "purl", "pytest", "sphinx", "testrepository (>=0.0.18)", "testtools"]
+
+[[package]]
 category = "main"
 description = "OAuthlib authentication support for Requests."
 name = "requests-oauthlib"
@@ -541,7 +557,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "70a9d3c75ea7ef78a5661cae7c00917a05ccfa7c809a0317fbd90cda077fe074"
+content-hash = "8d37bb8660cd3a7d02c6adc8d2a27c626656081cf77c6d41d06518fcf57658cc"
 python-versions = "^3.7"
 
 [metadata.files]
@@ -717,6 +733,10 @@ regex = [
 requests = [
     {file = "requests-2.23.0-py2.py3-none-any.whl", hash = "sha256:43999036bfa82904b6af1d99e4882b560e5e2c68e5c4b0aa03b655f3d7d73fee"},
     {file = "requests-2.23.0.tar.gz", hash = "sha256:b3f43d496c6daba4493e7c431722aeb7dbc6288f52a6e04e7b6023b0247817e6"},
+]
+requests-mock = [
+    {file = "requests-mock-1.8.0.tar.gz", hash = "sha256:e68f46844e4cee9d447150343c9ae875f99fa8037c6dcf5f15bf1fe9ab43d226"},
+    {file = "requests_mock-1.8.0-py2.py3-none-any.whl", hash = "sha256:11215c6f4df72702aa357f205cf1e537cffd7392b3e787b58239bde5fb3db53b"},
 ]
 requests-oauthlib = [
     {file = "requests-oauthlib-1.3.0.tar.gz", hash = "sha256:b4261601a71fd721a8bd6d7aa1cc1d6a8a93b4a9f5e96626f8e4d91e8beeaa6a"},

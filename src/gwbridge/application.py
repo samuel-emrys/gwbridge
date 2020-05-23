@@ -2,6 +2,7 @@ import requests
 import os
 import datetime
 import pypandoc
+import mimetypes
 from requests_oauthlib import OAuth1
 from urllib.parse import parse_qs
 import json
@@ -26,30 +27,121 @@ def publish(**kwargs):
     with open(config.get("file"), "r") as f:
         data = f.read()
 
-    document = parse_document(data)
-
     with open(METADATA_FILE, "r") as f:
         metadata = json.loads(f.read())
 
-    payload = {
-        "date": datetime.datetime.now(),
-        **document,
-        **metadata,
-    }
+    if not metadata.get("id", None):
+        url = construct_url(**{**config, **metadata})
+        metadata["id"] = create_blank_post(url, oauth)
 
-    url = construct_url(**config)
-    response = requests.post(url, data=payload, auth=oauth)
+        # Update the repository metadata file with new post ID. This change
+        # will need to be committed back to the repository for persistence.
+        with open(METADATA_FILE, "w") as f:
+            f.write(json.dumps(metadata))
+
+    if metadata.get("id", None):
+        document = parse_document(data, config, metadata, oauth)
+        payload = {
+            "date": datetime.datetime.now(),
+            **document,
+            **metadata,
+        }
+        url = construct_url(**{**config, **metadata})
+        response = requests.post(url, data=payload, auth=oauth)
 
     return response.status_code
 
 
-def parse_document(data):
+def create_blank_post(url, oauth):
+
+    payload = {
+        "date": datetime.datetime.now(),
+        "slug": "",
+        "status": "draft",
+        "title": "placeholder",
+        "content": "placeholder",
+        "author": 1,
+        "excerpt": None,
+        "featured_media": None,
+        "comment_status": "open",
+        "ping_status": "closed",
+        "format": "standard",
+        "meta": None,
+        "sticky": None,
+        "template": None,
+        "categories": None,
+        "tags": None,
+    }
+
+    response = requests.post(url, data=payload, auth=oauth)
+
+    return json.loads(response.text).get("id", None)
+
+
+def parse_document(data, config, metadata, oauth):
     html = pypandoc.convert_text(data, "html", format="md")
     soup = BeautifulSoup(html, "html.parser")
+    title = extract_title(soup)
 
-    document = extract_title(soup)
+    media_url = construct_url(**config, endpoint="media")
+    img_map = get_image_replacement_map(soup, media_url, metadata.get("id"), oauth)
+    img_map = upload_images(img_map, media_url, oauth)
+
+    replace_image_links(soup, img_map)
+
+    content = soup.prettify(formatter="html5")
+    document = {"title": title, "content": content}
 
     return document
+
+
+def get_image_replacement_map(soup, media_url, post_id, oauth):
+    """Create a dictionary associating the current image file path with the URL
+    to replace it with, using the filename it will be uploaded as, as the key
+    """
+    images_in_doc = [x.src for x in soup.find_all("img")]
+    images_existing = get_existing_images(media_url, oauth)
+    image_map = {}
+
+    for img in images_in_doc:
+        target_filename = "{}-{}".format(post_id, os.path.basename(img))
+        image_map[target_filename] = {
+            "local_path": img,
+            "target_path": images_existing.get(target_filename, None),
+        }
+
+    return image_map
+
+
+def upload_images(img_map, media_url, oauth):
+
+    for filename, img in img_map.items():
+        if img.get("target_path") is None:
+            with open(img.get("local_path"), "rb") as f:
+                data = f.read()
+
+            headers = {
+                "Content-Type": mimetypes.guess_type(img)[0],
+                "Content-Disposition": "attachment; filename={}".format(filename),
+            }
+            response = requests.post(media_url, data=data, headers=headers, auth=oauth,)
+            new_src = json.loads(response.text).get("guid").get("rendered")
+            img_map[filename]["target_path"] = new_src
+
+    return img_map
+
+
+def get_existing_images(media_url, oauth):
+
+    response = requests.get(media_url, auth=oauth)
+    images = json.loads(response.text)
+    image_urls = {
+        os.path.basename(x.get("guid", {}).get("rendered")): x.get("guid", {}).get(
+            "rendered"
+        )
+        for x in images
+    }
+    return image_urls
 
 
 def extract_title(soup):
@@ -59,6 +151,12 @@ def extract_title(soup):
     content = soup.prettify(formatter="html5")
 
     return {"title": title, "content": content}
+
+
+def replace_image_links(soup, img_map):
+
+    for img in img_map:
+        soup.find(text=img.get("local_path")).replace_with(img.get("target_path"))
 
 
 def parse_args(**kwargs):
@@ -76,8 +174,12 @@ def parse_args(**kwargs):
     return config
 
 
-def construct_url(base_url, api_version):
-    url = "{}/{}/{}".format(base_url, api_version, "posts")
+def construct_url(base_url, api_version, endpoint, post_id=None):
+
+    if not post_id:
+        url = "{}/{}/{}".format(base_url, api_version, endpoint)
+    else:
+        url = "{}/{}/{}/{}".format(base_url, api_version, endpoint, post_id)
     return url
 
 

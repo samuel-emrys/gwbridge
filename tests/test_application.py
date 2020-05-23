@@ -1,6 +1,6 @@
 import pytest
 import json
-import markdown
+import os
 from mock import patch, mock_open
 from gwbridge import application
 
@@ -57,3 +57,60 @@ def test_parse_document(mock_md_file):
     assert payload.get("title") == "This is the heading of the post"
     comparison = '<h2 id="this-is-the-second-heading">\n This is the second heading\n</h2>\n<p>\n This is what content looks like. I really like it! This is a code block for a bash terminal:\n</p>\n<div class="sourceCode" id="cb1">\n <pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a>$ <span class="fu">which</span> pandoc</span></code></pre>\n</div>\n<p>\n This has the following advantages:\n</p>\n<ol type="1">\n <li>\n  First advantage\n </li>\n <li>\n  Second\n </li>\n <li>\n  Third\n </li>\n</ol>\n<ul>\n <li>\n  list item 1\n </li>\n <li>\n  list item 2\n </li>\n <li>\n  list item 3\n </li>\n</ul>\n<p>\n And this is a code block for some python code:\n</p>\n<div class="sourceCode" id="cb2">\n <pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="im">from</span> abc <span class="im">import</span> ABC</span>\n<span id="cb2-2"><a href="#cb2-2"></a><span class="im">from</span> abc <span class="im">import</span> abstractmethod</span>\n<span id="cb2-3"><a href="#cb2-3"></a><span class="im">import</span> tzlocal</span>\n<span id="cb2-4"><a href="#cb2-4"></a><span class="im">import</span> pytz</span>\n<span id="cb2-5"><a href="#cb2-5"></a><span class="im">import</span> sys</span>\n<span id="cb2-6"><a href="#cb2-6"></a></span>\n<span id="cb2-7"><a href="#cb2-7"></a></span>\n<span id="cb2-8"><a href="#cb2-8"></a><span class="kw">class</span> Notifier(ABC):</span>\n<span id="cb2-9"><a href="#cb2-9"></a>    <span class="kw">def</span> <span class="fu">__init__</span>():</span>\n<span id="cb2-10"><a href="#cb2-10"></a>        <span class="va">self</span>.__config <span class="op">=</span> config</span>\n<span id="cb2-11"><a href="#cb2-11"></a>        <span class="va">self</span>.__creds <span class="op">=</span> creds</span>\n<span id="cb2-12"><a href="#cb2-12"></a>        <span class="va">self</span>._db <span class="op">=</span> db</span>\n<span id="cb2-13"><a href="#cb2-13"></a>        <span class="va">self</span>._tz <span class="op">=</span> pytz.timezone(timezone)</span>\n<span id="cb2-14"><a href="#cb2-14"></a>        <span class="va">self</span>._thresh <span class="op">=</span> fileio.import_json(<span class="va">self</span>.__config)</span></code></pre>\n</div>\n<h3 id="heading-3">\n Heading 3\n</h3>\n<p>\n This is a sub sub heading. This is where more granular detail goes. Lets see if we can\n <em>\n  italic\n </em>\n and\n <strong>\n  bold\n </strong>\n some text. This is some\n <code>\n  pre formatted\n </code>\n text! It&rsquo;s great.\n</p>\n<p>\n Lets also test an image! This is an image:\n</p>\n<p>\n <img src="img/test.png">\n</p>\n<p>\n This is another image:\n</p>\n<p>\n <img src="img/another_image.jpg">\n</p>\n'
     assert payload.get("content") == comparison
+
+
+def test_create_blank_post(requests_mock):
+
+    url = "http://www.example.com/wp-json/wp/v2/posts"
+    oauth = None
+
+    mock_response_file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "resources/mock_blank_post.json"
+    )
+    with open(mock_response_file, "r") as f:
+        mock_response = f.read()
+
+    requests_mock.post(url, text=mock_response)
+
+    post_id = application.create_blank_post(url, oauth)
+
+    assert post_id == 254
+
+
+def test_get_image_replacement_map():
+    pass
+
+
+def test_upload_images():
+    pass
+
+
+def test_get_existing_images():
+    pass
+
+
+def test_extract_title():
+    pass
+
+
+def test_replace_image_links():
+    pass
+
+
+def test_construct_url():
+    base_url = "https://www.example.com/wp-json"
+    api_version = "wp/v2"
+    endpoint = "posts"
+
+    url = application.construct_url(base_url, api_version, endpoint)
+    assert url == "https://www.example.com/wp-json/wp/v2/posts"
+
+    url = application.construct_url(base_url, api_version, endpoint, 2)
+    assert url == "https://www.example.com/wp-json/wp/v2/posts/2"
+
+    endpoint = "media"
+    url = application.construct_url(base_url, api_version, endpoint)
+    assert url == "https://www.example.com/wp-json/wp/v2/media"
+
+    url = application.construct_url(base_url, api_version, endpoint, 2)
+    assert url == "https://www.example.com/wp-json/wp/v2/media/2"
