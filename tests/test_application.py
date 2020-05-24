@@ -1,15 +1,68 @@
 import pytest
 import json
 import os
+import pypandoc
+from bs4 import BeautifulSoup
 from mock import patch, mock_open
 from gwbridge import application
 
 
 @pytest.fixture(scope="module")
 def mock_md_file():
+    mock_response_file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "resources/mock_markdown_file.md"
+    )
+    with open(mock_response_file, "r") as f:
+        mock_response = f.read()
 
-    md = "# This is the heading of the post\n\n## This is the second heading\n\nThis is what content looks like. I really like it! This is a code block for a bash terminal:\n\n```bash\n$ which pandoc\n```\n\nThis has the following advantages:\n\n1. First advantage\n2. Second\n3. Third\n\n- list item 1\n- list item 2\n- list item 3\n\nAnd this is a code block for some python code:\n\n```python\nfrom abc import ABC\nfrom abc import abstractmethod\nimport tzlocal\nimport pytz\nimport sys\n\n\nclass Notifier(ABC):\n    def __init__():\n        self.__config = config\n        self.__creds = creds\n        self._db = db\n        self._tz = pytz.timezone(timezone)\n        self._thresh = fileio.import_json(self.__config)\n```\n\n\n### Heading 3\n\nThis is a sub sub heading. This is where more granular detail goes. Lets see if we can _italic_ and **bold** some text. This is some `pre formatted` text! It's great.\n\nLets also test an image! This is an image:\n\n![](img/test.png)\n\nThis is another image:\n\n![](img/another_image.jpg)\n"
-    yield md
+    yield mock_response
+
+
+@pytest.fixture(scope="module")
+def mock_blank_post_response():
+    mock_response_file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "resources/mock_blank_post.json"
+    )
+    with open(mock_response_file, "r") as f:
+        mock_response = f.read()
+
+    yield mock_response
+
+
+@pytest.fixture(scope="module")
+def mock_md_conversion_result():
+    mock_response_file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "resources/mock_md_conversion_result.html",
+    )
+    with open(mock_response_file, "r") as f:
+        mock_response = f.read()
+
+    yield mock_response
+
+
+@pytest.fixture(scope="module")
+def mock_upload_image_response():
+    mock_response_file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "resources/mock_upload_image_response.json",
+    )
+    with open(mock_response_file, "r") as f:
+        mock_response = f.read()
+
+    yield mock_response
+
+
+@pytest.fixture(scope="module")
+def mock_get_existing_images_response():
+    mock_response_file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "resources/mock_get_existing_images_response.json",
+    )
+    with open(mock_response_file, "r") as f:
+        mock_response = f.read()
+
+    yield mock_response
 
 
 @patch(
@@ -51,50 +104,142 @@ def test_parse_args(mock_os, mock_file):
     assert config.get("api_version") == "wp/v2"
 
 
-def test_parse_document(mock_md_file):
-    payload = application.parse_document(mock_md_file)
+def test_parse_document(mock_md_file, mock_md_conversion_result):
+
+    config = {
+        "base_url": "https://www.example.com/wp-json",
+        "api_version": "wp/v2",
+    }
+
+    metadata = {
+        "id": "",
+        "slug": "",
+        "status": "draft",
+        "author": 1,
+        "excerpt": "",
+        "featured_media": "",
+        "comment_status": "open",
+        "ping_status": "closed",
+        "format": "standard",
+        "meta": "",
+        "sticky": "",
+        "template": "",
+        "categories": "",
+        "tags": "",
+    }
+
+    payload = application.parse_document(mock_md_file, config, metadata, None)
 
     assert payload.get("title") == "This is the heading of the post"
-    comparison = '<h2 id="this-is-the-second-heading">\n This is the second heading\n</h2>\n<p>\n This is what content looks like. I really like it! This is a code block for a bash terminal:\n</p>\n<div class="sourceCode" id="cb1">\n <pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1"></a>$ <span class="fu">which</span> pandoc</span></code></pre>\n</div>\n<p>\n This has the following advantages:\n</p>\n<ol type="1">\n <li>\n  First advantage\n </li>\n <li>\n  Second\n </li>\n <li>\n  Third\n </li>\n</ol>\n<ul>\n <li>\n  list item 1\n </li>\n <li>\n  list item 2\n </li>\n <li>\n  list item 3\n </li>\n</ul>\n<p>\n And this is a code block for some python code:\n</p>\n<div class="sourceCode" id="cb2">\n <pre class="sourceCode python"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a><span class="im">from</span> abc <span class="im">import</span> ABC</span>\n<span id="cb2-2"><a href="#cb2-2"></a><span class="im">from</span> abc <span class="im">import</span> abstractmethod</span>\n<span id="cb2-3"><a href="#cb2-3"></a><span class="im">import</span> tzlocal</span>\n<span id="cb2-4"><a href="#cb2-4"></a><span class="im">import</span> pytz</span>\n<span id="cb2-5"><a href="#cb2-5"></a><span class="im">import</span> sys</span>\n<span id="cb2-6"><a href="#cb2-6"></a></span>\n<span id="cb2-7"><a href="#cb2-7"></a></span>\n<span id="cb2-8"><a href="#cb2-8"></a><span class="kw">class</span> Notifier(ABC):</span>\n<span id="cb2-9"><a href="#cb2-9"></a>    <span class="kw">def</span> <span class="fu">__init__</span>():</span>\n<span id="cb2-10"><a href="#cb2-10"></a>        <span class="va">self</span>.__config <span class="op">=</span> config</span>\n<span id="cb2-11"><a href="#cb2-11"></a>        <span class="va">self</span>.__creds <span class="op">=</span> creds</span>\n<span id="cb2-12"><a href="#cb2-12"></a>        <span class="va">self</span>._db <span class="op">=</span> db</span>\n<span id="cb2-13"><a href="#cb2-13"></a>        <span class="va">self</span>._tz <span class="op">=</span> pytz.timezone(timezone)</span>\n<span id="cb2-14"><a href="#cb2-14"></a>        <span class="va">self</span>._thresh <span class="op">=</span> fileio.import_json(<span class="va">self</span>.__config)</span></code></pre>\n</div>\n<h3 id="heading-3">\n Heading 3\n</h3>\n<p>\n This is a sub sub heading. This is where more granular detail goes. Lets see if we can\n <em>\n  italic\n </em>\n and\n <strong>\n  bold\n </strong>\n some text. This is some\n <code>\n  pre formatted\n </code>\n text! It&rsquo;s great.\n</p>\n<p>\n Lets also test an image! This is an image:\n</p>\n<p>\n <img src="img/test.png">\n</p>\n<p>\n This is another image:\n</p>\n<p>\n <img src="img/another_image.jpg">\n</p>\n'
-    assert payload.get("content") == comparison
+    assert payload.get("content") == mock_md_conversion_result
 
 
-def test_create_blank_post(requests_mock):
+def test_create_blank_post(requests_mock, mock_blank_post_response):
 
-    url = "http://www.example.com/wp-json/wp/v2/posts"
+    url = "https://www.example.com/wp-json/wp/v2/posts"
     oauth = None
-
-    mock_response_file = os.path.join(
-        os.path.dirname(os.path.abspath(__file__)), "resources/mock_blank_post.json"
-    )
-    with open(mock_response_file, "r") as f:
-        mock_response = f.read()
-
-    requests_mock.post(url, text=mock_response)
-
+    requests_mock.post(url, text=mock_blank_post_response)
     post_id = application.create_blank_post(url, oauth)
 
     assert post_id == 254
 
 
-def test_get_image_replacement_map():
-    pass
+def test_get_image_replacement_map(
+    requests_mock, mock_md_file, mock_get_existing_images_response
+):
+    media_url = "https://www.example.com/wp-json/wp/v2/media"
+    requests_mock.get(media_url, text=mock_get_existing_images_response)
+    html = pypandoc.convert_text(mock_md_file, "html", format="md")
+    soup = BeautifulSoup(html, "html.parser")
+    post_id = 251
+
+    image_map = application.get_image_replacement_map(soup, media_url, post_id, None)
+    image_map_comparison = {
+        "251-test.png": {"local_path": "img/test.png", "target_path": None},
+        "251-another_image.jpg": {
+            "local_path": "img/another_image.jpg",
+            "target_path": None,
+        },
+    }
+
+    assert image_map is not None
+    assert image_map == image_map_comparison
 
 
-def test_upload_images():
-    pass
+@patch(
+    "builtins.open", new_callable=mock_open, read_data="",
+)
+def test_upload_images(mock_file, requests_mock, mock_upload_image_response):
+
+    media_url = "https://www.example.com/wp-json/wp/v2/media"
+
+    requests_mock.post(media_url, text=mock_upload_image_response)
+    img_map = {
+        "249-test1.png": {
+            "local_path": "img/test1.png",
+            "target_path": "https://www.example.com/2020/05/24/249-test1.png",
+        },
+        "250-test2.jpg": {"local_path": "img/test2.jpg", "target_path": None},
+    }
+
+    img_map = application.upload_images(img_map, media_url, oauth=None)
+
+    assert (
+        img_map.get("249-test1.png").get("target_path")
+        == "https://www.example.com/2020/05/24/249-test1.png"
+    )
+    assert img_map.get("250-test2.jpg").get("target_path") is not None
 
 
-def test_get_existing_images():
-    pass
+def test_get_existing_images(requests_mock, mock_get_existing_images_response):
+
+    media_url = "https://www.example.com/wp-json/wp/v2/media"
+    requests_mock.get(media_url, text=mock_get_existing_images_response)
+    image_urls = application.get_existing_images(media_url, None)
+
+    assert "test.png" in image_urls.keys()
+    assert "reverse-proxy.png" in image_urls.keys()
+    assert (
+        image_urls.get("test.png", None)
+        == "https://www.example.com/wp-content/uploads/2020/05/test.png"
+    )
+    assert (
+        image_urls.get("reverse-proxy.png")
+        == "https://www.example.com/wp-content/uploads/2020/01/reverse-proxy.png"
+    )
 
 
-def test_extract_title():
-    pass
+def test_extract_title(mock_md_file):
+    html = pypandoc.convert_text(mock_md_file, "html", format="md")
+    soup = BeautifulSoup(html, "html.parser")
+    title = application.extract_title(soup)
+
+    assert title == "This is the heading of the post"
+    assert soup is not None
+    assert soup.h1 is None
 
 
-def test_replace_image_links():
-    pass
+def test_replace_image_links(mock_md_file):
+    html = pypandoc.convert_text(mock_md_file, "html", format="md")
+    soup = BeautifulSoup(html, "html.parser")
+    img_map = {
+        "249-test.png": {
+            "local_path": "img/test.png",
+            "target_path": "https://www.example.com/2020/05/24/249-test.png",
+        },
+        "249-another_image.jpg": {
+            "local_path": "img/another_image.jpg",
+            "target_path": "https://www.example.com/2020/05/24/249-another_image.jpg",
+        },
+    }
+
+    application.replace_image_links(soup, img_map)
+
+    images = [x["src"] for x in soup.find_all("img")]
+
+    assert len(images) == 2
+    assert images[0] == "https://www.example.com/2020/05/24/249-test.png"
+    assert images[1] == "https://www.example.com/2020/05/24/249-another_image.jpg"
 
 
 def test_construct_url():

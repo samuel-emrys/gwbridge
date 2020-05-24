@@ -99,7 +99,7 @@ def get_image_replacement_map(soup, media_url, post_id, oauth):
     """Create a dictionary associating the current image file path with the URL
     to replace it with, using the filename it will be uploaded as, as the key
     """
-    images_in_doc = [x.src for x in soup.find_all("img")]
+    images_in_doc = [x["src"] for x in soup.find_all("img")]
     images_existing = get_existing_images(media_url, oauth)
     image_map = {}
 
@@ -121,7 +121,7 @@ def upload_images(img_map, media_url, oauth):
                 data = f.read()
 
             headers = {
-                "Content-Type": mimetypes.guess_type(img)[0],
+                "Content-Type": mimetypes.guess_type(img.get("local_path"))[0],
                 "Content-Disposition": "attachment; filename={}".format(filename),
             }
             response = requests.post(media_url, data=data, headers=headers, auth=oauth,)
@@ -148,15 +148,16 @@ def extract_title(soup):
 
     title = soup.h1.string
     soup.h1.extract()
-    content = soup.prettify(formatter="html5")
 
-    return {"title": title, "content": content}
+    return title
 
 
 def replace_image_links(soup, img_map):
 
-    for img in img_map:
-        soup.find(text=img.get("local_path")).replace_with(img.get("target_path"))
+    for filename, img in img_map.items():
+        matches = soup.find_all(src=img.get("local_path"))
+        for match in matches:
+            match["src"] = img.get("target_path")
 
 
 def parse_args(**kwargs):
