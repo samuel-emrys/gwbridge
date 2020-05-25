@@ -42,6 +42,18 @@ def mock_md_conversion_result():
 
 
 @pytest.fixture(scope="module")
+def mock_parse_document_result():
+    mock_response_file = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)),
+        "resources/mock_parse_document_result.html",
+    )
+    with open(mock_response_file, "r") as f:
+        mock_response = f.read()
+
+    yield mock_response
+
+
+@pytest.fixture(scope="module")
 def mock_upload_image_response():
     mock_response_file = os.path.join(
         os.path.dirname(os.path.abspath(__file__)),
@@ -104,7 +116,16 @@ def test_parse_args(mock_os, mock_file):
     assert config.get("api_version") == "wp/v2"
 
 
-def test_parse_document(mock_md_file, mock_md_conversion_result):
+@patch("builtins.open", new_callable=mock_open, read_data="")
+def test_parse_document(
+    mock_file,
+    requests_mock,
+    mock_md_file,
+    mock_parse_document_result,
+    mock_get_existing_images_response,
+    mock_upload_image_response,
+    mock_blank_post_response,
+):
 
     config = {
         "base_url": "https://www.example.com/wp-json",
@@ -112,8 +133,8 @@ def test_parse_document(mock_md_file, mock_md_conversion_result):
     }
 
     metadata = {
-        "id": "",
-        "slug": "",
+        "id": "254",
+        "slug": "this is a slug",
         "status": "draft",
         "author": 1,
         "excerpt": "",
@@ -127,11 +148,18 @@ def test_parse_document(mock_md_file, mock_md_conversion_result):
         "categories": "",
         "tags": "",
     }
+    media_url = "https://www.example.com/wp-json/wp/v2/media"
+    posts_url = "https://www.example.com/wp-json/wp/v2/posts"
+
+    requests_mock.get(media_url, text=mock_get_existing_images_response)
+    requests_mock.post(media_url, text=mock_upload_image_response)
+    requests_mock.post(posts_url, text=mock_blank_post_response)
 
     payload = application.parse_document(mock_md_file, config, metadata, None)
 
+    soup_comparison = BeautifulSoup(mock_parse_document_result, "html.parser")
     assert payload.get("title") == "This is the heading of the post"
-    assert payload.get("content") == mock_md_conversion_result
+    assert payload.get("content") == soup_comparison.prettify(formatter="html5")
 
 
 def test_create_blank_post(requests_mock, mock_blank_post_response):
@@ -151,15 +179,15 @@ def test_get_image_replacement_map(
     requests_mock.get(media_url, text=mock_get_existing_images_response)
     html = pypandoc.convert_text(mock_md_file, "html", format="md")
     soup = BeautifulSoup(html, "html.parser")
-    post_id = 251
+    post_id = 254
 
     image_map = application.get_image_replacement_map(soup, media_url, post_id, None)
     image_map_comparison = {
-        "251-test.png": {"local_path": "img/test.png", "target_path": None},
-        "251-another_image.jpg": {
-            "local_path": "img/another_image.jpg",
-            "target_path": None,
+        "254-test1.png": {
+            "local_path": "img/test1.png",
+            "target_path": "https://www.example.com/wp-content/uploads/2020/05/24/254-test1.png",
         },
+        "254-test2.jpg": {"local_path": "img/test2.jpg", "target_path": None},
     }
 
     assert image_map is not None
@@ -175,20 +203,20 @@ def test_upload_images(mock_file, requests_mock, mock_upload_image_response):
 
     requests_mock.post(media_url, text=mock_upload_image_response)
     img_map = {
-        "249-test1.png": {
+        "254-test1.png": {
             "local_path": "img/test1.png",
-            "target_path": "https://www.example.com/2020/05/24/249-test1.png",
+            "target_path": "https://www.example.com/wp-content/uploads/2020/05/24/254-test1.png",
         },
-        "250-test2.jpg": {"local_path": "img/test2.jpg", "target_path": None},
+        "254-test2.jpg": {"local_path": "img/test2.jpg", "target_path": None},
     }
 
     img_map = application.upload_images(img_map, media_url, oauth=None)
 
     assert (
-        img_map.get("249-test1.png").get("target_path")
-        == "https://www.example.com/2020/05/24/249-test1.png"
+        img_map.get("254-test1.png").get("target_path")
+        == "https://www.example.com/wp-content/uploads/2020/05/24/254-test1.png"
     )
-    assert img_map.get("250-test2.jpg").get("target_path") is not None
+    assert img_map.get("254-test2.jpg").get("target_path") is not None
 
 
 def test_get_existing_images(requests_mock, mock_get_existing_images_response):
@@ -197,11 +225,11 @@ def test_get_existing_images(requests_mock, mock_get_existing_images_response):
     requests_mock.get(media_url, text=mock_get_existing_images_response)
     image_urls = application.get_existing_images(media_url, None)
 
-    assert "test.png" in image_urls.keys()
+    assert "254-test1.png" in image_urls.keys()
     assert "reverse-proxy.png" in image_urls.keys()
     assert (
-        image_urls.get("test.png", None)
-        == "https://www.example.com/wp-content/uploads/2020/05/test.png"
+        image_urls.get("254-test1.png", None)
+        == "https://www.example.com/wp-content/uploads/2020/05/24/254-test1.png"
     )
     assert (
         image_urls.get("reverse-proxy.png")
@@ -223,13 +251,13 @@ def test_replace_image_links(mock_md_file):
     html = pypandoc.convert_text(mock_md_file, "html", format="md")
     soup = BeautifulSoup(html, "html.parser")
     img_map = {
-        "249-test.png": {
-            "local_path": "img/test.png",
-            "target_path": "https://www.example.com/2020/05/24/249-test.png",
+        "254-test1.png": {
+            "local_path": "img/test1.png",
+            "target_path": "https://www.example.com/wp-content/uploads/2020/05/24/254-test1.png",
         },
-        "249-another_image.jpg": {
-            "local_path": "img/another_image.jpg",
-            "target_path": "https://www.example.com/2020/05/24/249-another_image.jpg",
+        "254-test2.jpg": {
+            "local_path": "img/test2.jpg",
+            "target_path": "https://www.example.com/wp-content/uploads/2020/05/24/254-test2.jpg",
         },
     }
 
@@ -238,8 +266,14 @@ def test_replace_image_links(mock_md_file):
     images = [x["src"] for x in soup.find_all("img")]
 
     assert len(images) == 2
-    assert images[0] == "https://www.example.com/2020/05/24/249-test.png"
-    assert images[1] == "https://www.example.com/2020/05/24/249-another_image.jpg"
+    assert (
+        images[0]
+        == "https://www.example.com/wp-content/uploads/2020/05/24/254-test1.png"
+    )
+    assert (
+        images[1]
+        == "https://www.example.com/wp-content/uploads/2020/05/24/254-test2.jpg"
+    )
 
 
 def test_construct_url():

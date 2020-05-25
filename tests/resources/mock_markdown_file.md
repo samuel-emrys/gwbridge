@@ -44,8 +44,8 @@ This is a sub sub heading. This is where more granular detail goes. Lets see if 
 
 Lets also test an image! This is an image:
 
-![](img/test.png)
+![](img/test1.png)
 
 This is another image:
 
-![](img/another_image.jpg)
+![](img/test2.jpg)

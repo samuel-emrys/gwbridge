@@ -3,14 +3,14 @@ import os
 import datetime
 import pypandoc
 import mimetypes
-from requests_oauthlib import OAuth1
-from urllib.parse import parse_qs
 import json
 import shutil
-from gwbridge import ROOT_DIR
-from gwbridge import METADATA_FILE
-from gwbridge import CONFIG_FILE
 from bs4 import BeautifulSoup
+from urllib.parse import parse_qs
+from requests_oauthlib import OAuth1
+from gwbridge import ROOT_DIR
+from gwbridge import CONFIG_FILE
+from gwbridge import METADATA_FILE
 
 
 def publish(**kwargs):
@@ -86,12 +86,10 @@ def parse_document(data, config, metadata, oauth):
     media_url = construct_url(**config, endpoint="media")
     img_map = get_image_replacement_map(soup, media_url, metadata.get("id"), oauth)
     img_map = upload_images(img_map, media_url, oauth)
-
     replace_image_links(soup, img_map)
-
     content = soup.prettify(formatter="html5")
-    document = {"title": title, "content": content}
 
+    document = {"title": title, "content": content}
     return document
 
 
