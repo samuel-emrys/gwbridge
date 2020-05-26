@@ -31,23 +31,62 @@ def publish(**kwargs):
         metadata = json.loads(f.read())
 
     if not metadata.get("id", None):
-        url = construct_url(**{**config, **metadata})
+        print("It doesn't look like this has been published yet. Creating a new post!")
+        print("Setting things up...")
+        url = construct_url(
+            base_url=config.get("base_url"),
+            api_version=config.get("api_version"),
+            endpoint="posts",
+        )
         metadata["id"] = create_blank_post(url, oauth)
 
         # Update the repository metadata file with new post ID. This change
         # will need to be committed back to the repository for persistence.
         with open(METADATA_FILE, "w") as f:
-            f.write(json.dumps(metadata))
+            f.write(json.dumps(metadata, indent=4))
 
     if metadata.get("id", None):
+        print("Pushing new content...")
         document = parse_document(data, config, metadata, oauth)
         payload = {
             "date": datetime.datetime.now(),
             **document,
             **metadata,
         }
-        url = construct_url(**{**config, **metadata})
+        url = construct_url(
+            base_url=config.get("base_url"),
+            api_version=config.get("api_version"),
+            endpoint="posts",
+            post_id=metadata.get("id"),
+        )
         response = requests.post(url, data=payload, auth=oauth)
+
+        if response.status_code == 200:
+            response_dict = json.loads(response.text)
+
+            # Update relevant metadata from response
+            metadata["slug"] = response_dict.get("slug", "")
+            metadata["excerpt"] = response_dict.get("excerpt", {}).get("rendered", "")
+            metadata["featured_media"] = response_dict.get("featured_media", 0)
+            metadata["sticky"] = response_dict.get("sticky", False)
+            metadata["categories"] = response_dict.get("categories", [])
+            metadata["tags"] = response_dict.get("tags", [])
+            with open(METADATA_FILE, "w") as f:
+                f.write(json.dumps(metadata, indent=4))
+
+            print(
+                "Done! The updated post is available at {}".format(
+                    response_dict.get("guid").get("rendered")
+                )
+            )
+        else:
+            print(
+                "Something went wrong. The server returned status code: {}".format(
+                    str(response.status_code)
+                )
+            )
+    else:
+        print("Something went wrong. Content not updated.")
 
     return response.status_code
 
@@ -83,7 +122,11 @@ def parse_document(data, config, metadata, oauth):
     soup = BeautifulSoup(html, "html.parser")
     title = extract_title(soup)
 
-    media_url = construct_url(**config, endpoint="media")
+    media_url = construct_url(
+        base_url=config.get("base_url"),
+        api_version=config.get("api_version"),
+        endpoint="media",
+    )
     img_map = get_image_replacement_map(soup, media_url, metadata.get("id"), oauth)
     img_map = upload_images(img_map, media_url, oauth)
     replace_image_links(soup, img_map)
