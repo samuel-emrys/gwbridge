@@ -130,7 +130,7 @@ def parse_document(data, config, metadata, oauth):
     img_map = get_image_replacement_map(soup, media_url, metadata.get("id"), oauth)
     img_map = upload_images(img_map, media_url, oauth)
     replace_image_links(soup, img_map)
-    content = soup.prettify(formatter="html5")
+    content = soup.encode(formatter="html5").lstrip()
 
     document = {"title": title, "content": content}
     return document

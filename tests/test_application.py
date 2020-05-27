@@ -159,7 +159,7 @@ def test_parse_document(
 
     soup_comparison = BeautifulSoup(mock_parse_document_result, "html.parser")
     assert payload.get("title") == "This is the heading of the post"
-    assert payload.get("content") == soup_comparison.prettify(formatter="html5")
+    assert payload.get("content") == soup_comparison.encode(formatter="html5")
 
 
 def test_create_blank_post(requests_mock, mock_blank_post_response):
