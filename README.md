@@ -42,7 +42,7 @@ Configuration file created at .deploy/config.json
 Metadata file created at .deploy/metadata.json
 ```
 
-This configures the file `README.md` to be pushed as a new blog post to the Wordpress site https://www.example.com. As mentioned, this will create a configuration file in `.deploy/config.json`, and initialise a file containing the post metadata in `.deploy/metadata.json`. Edit these files as you desire to configure the way your post is created.
+This configures the file `README.md` to be pushed as a new blog post to the Wordpress site https://www.example.com. As mentioned, this will create a configuration file in `.deploy/config.json`, and initialise a file containing the post metadata in `.deploy/metadata.json`. Edit these files as you desire to configure the way your post is created. The available fields are detailed in the [Wordpress REST API Documentation](https://developer.wordpress.org/rest-api/reference/posts/).
 
 ### Authentication
 
