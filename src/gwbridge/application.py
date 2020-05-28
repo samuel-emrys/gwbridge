@@ -227,9 +227,10 @@ def construct_url(base_url, api_version, endpoint, post_id=None):
 
 def authenticate(**kwargs):
 
-    authentication_urls = discover_auth_endpoints(**kwargs)
+    config = parse_args(**kwargs)
+    authentication_urls = discover_auth_endpoints(**config)
     oauth = OAuth1(
-        client_key=kwargs["client_key"], client_secret=kwargs["client_secret"],
+        client_key=config.get("client_key"), client_secret=config.get("client_secret"),
     )
     r = requests.post(url=authentication_urls.get("request"), auth=oauth)
     credentials = parse_qs(r.content.decode("utf-8"))
@@ -244,8 +245,8 @@ def authenticate(**kwargs):
     verifier = input("Enter the verification token: ")
 
     oauth = OAuth1(
-        client_key=kwargs["client_key"],
-        client_secret=kwargs["client_secret"],
+        client_key=config.get("client_key"),
+        client_secret=config.get("client_secret"),
         resource_owner_key=resource_owner_key,
         resource_owner_secret=resource_owner_secret,
         verifier=verifier,
@@ -256,8 +257,8 @@ def authenticate(**kwargs):
     resource_owner_key = credentials.get("oauth_token")[0]
     resource_owner_secret = credentials.get("oauth_token_secret")[0]
 
-    print("{:25}{}".format("Client key", kwargs["client_key"]))
-    print("{:25}{}".format("Client secret", kwargs["client_secret"]))
+    print("{:25}{}".format("Client key", config.get("client_key")))
+    print("{:25}{}".format("Client secret", config.get("client_secret")))
     print("{:25}{}".format("Resource owner key", resource_owner_key))
     print("{:25}{}".format("Resource owner secret", resource_owner_secret))
 
