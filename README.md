@@ -1,6 +1,6 @@
 # GitHub Wordpress Bridge
 
-gwbridge is a program that manages the continuous deployment of content written on GitHub to a WordPress blog.
+gwbridge is a program that manages the continuous deployment of markdown content on GitHub to a WordPress blog.
 
 ## External Dependencies
 
@@ -27,7 +27,7 @@ Of these, the `pipx` method is recommended. This will make the command available
 `gwbridge` has three functions:
 1. Initialisation of a repository
 2. Obtaining authentication keys
-3. Publishing a post to a wordpress blog
+3. Publishing a post to a Wordpress blog
 
 ### Initialisation
 
@@ -50,6 +50,12 @@ Authentication requires the Wordpress server to have the [WordPress REST API - O
 
 ```bash
 $ gwbridge authenticate --client-key $WP_CLIENT_KEY --client-secret $WP_CLIENT_SECRET
+Authenticate at the following URL to obtain a verification token: https://www.example.com/oauth1/authorize?oauth_token=j53H324FIjuBNvZJSYA5zLdR
+Enter the verification token: sjBsFr5dPS9uPNuhIydLNrS9
+Client key               HZAajT8gOtI8
+Client secret            wZl5Y6GnY9q77ujTfblbtzkL6QuMN0bbcBbcLg4wHXPRnSgK
+Resource owner key       ZFM4an7hJG45ajFrXlLGd7dM
+Resource owner secret    3CgBHAkHclw4SgErQYrq6WrB1d04BgaQFlqdjnAsBWLIafOI
 ```
 
 Otherwise, you'll need to pass the `--base-url` and `--api-version` flags to indicate the site you want to authenticate to:
@@ -62,10 +68,14 @@ Navigate to the prompted link, and sign in to your desired Wordpress account. It
 
 ### Publish
 
-To publish, make sure you have your desired values in `.deploy/metadata`, and then execute the following command:
+To publish, make sure you have your desired values in `.deploy/metadata`, and then execute the following command using the credentials obtained from the `authentication` command.
 
 ```bash
 $ gwbridge publish --client-key $WP_CLIENT_KEY --client-secret $WP_CLIENT_SECRET --resource-owner-key $WP_RESOURCE_OWNER_KEY --resource-owner-secret $WP_RESOURCE_OWNER_SECRET
+It doesn't look like this has been published yet. Creating a new post!
+Setting things up...
+Pushing new content...
+Done! The updated post is available at https://www.example.com/?p=173
 ```
 
 NOTE: The post `title` and `content` fields will be automatically populated from the markdown file and shouldn't be populated in the metadata configuration. For new posts, the `id` field should be left blank. This will be automatically updated after the post is first published to Wordpress to the new post id.
