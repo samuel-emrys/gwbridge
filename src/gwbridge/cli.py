@@ -8,21 +8,6 @@ def cli(ctx, **kwargs):
     pass
 
 
-@click.group()
-def config(**kwargs):
-    pass
-
-
-@config.command()
-def get(**kwargs):
-    pass
-
-
-@config.command()
-def set(**kwargs):
-    pass
-
-
 @cli.command()
 @click.option("-f", "--file", type=str, help="The file to publish")
 @click.option("--client-key", type=str, help="The client key")
@@ -47,9 +32,6 @@ def authenticate(**kwargs):
 @cli.command()
 def init(**kwargs):
     gwbridge.application.init(**kwargs)
-
-
-cli.add_command(config)
 
 
 if __name__ == "__main__":
