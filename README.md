@@ -6,7 +6,7 @@ gwbridge is a program that manages the continuous deployment of markdown content
 
 ## External Dependencies
 
-- Pandoc
+- Pandoc 2.9 or later
 
 See [Installing pandoc](https://pandoc.org/installing.html) for instructions on installing this for your target platform.
 
