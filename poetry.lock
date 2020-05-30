@@ -127,7 +127,7 @@ description = "the modular source code checker: pep8 pyflakes and co"
 name = "flake8"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
-version = "3.8.1"
+version = "3.8.2"
 
 [package.dependencies]
 mccabe = ">=0.6.0,<0.7.0"
@@ -144,7 +144,7 @@ description = "File identification library for Python"
 name = "identify"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
-version = "1.4.15"
+version = "1.4.17"
 
 [package.extras]
 license = ["editdistance"]
@@ -172,6 +172,27 @@ zipp = ">=0.5"
 [package.extras]
 docs = ["sphinx", "rst.linker"]
 testing = ["packaging", "importlib-resources"]
+
+[[package]]
+category = "dev"
+description = "Read resources from Python packages"
+marker = "python_version < \"3.7\""
+name = "importlib-resources"
+optional = false
+python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
+version = "1.5.0"
+
+[package.dependencies]
+[package.dependencies.importlib-metadata]
+python = "<3.8"
+version = "*"
+
+[package.dependencies.zipp]
+python = "<3.8"
+version = ">=0.4"
+
+[package.extras]
+docs = ["sphinx", "rst.linker", "jaraco.packaging"]
 
 [[package]]
 category = "dev"
@@ -229,7 +250,7 @@ description = "Core utilities for Python packages"
 name = "packaging"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
-version = "20.3"
+version = "20.4"
 
 [package.dependencies]
 pyparsing = ">=2.0.2"
@@ -277,6 +298,10 @@ virtualenv = ">=20.0.8"
 
 [package.dependencies.importlib-metadata]
 python = "<3.8"
+version = "*"
+
+[package.dependencies.importlib-resources]
+python = "<3.7"
 version = "*"
 
 [[package]]
@@ -455,7 +480,7 @@ description = "Python 2 and 3 compatibility utilities"
 name = "six"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*"
-version = "1.14.0"
+version = "1.15.0"
 
 [[package]]
 category = "main"
@@ -508,7 +533,7 @@ description = "Virtual Python Environment builder"
 name = "virtualenv"
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,>=2.7"
-version = "20.0.20"
+version = "20.0.21"
 
 [package.dependencies]
 appdirs = ">=1.4.3,<2"
@@ -519,6 +544,10 @@ six = ">=1.9.0,<2"
 [package.dependencies.importlib-metadata]
 python = "<3.8"
 version = ">=0.12,<2"
+
+[package.dependencies.importlib-resources]
+python = "<3.7"
+version = ">=1.0,<2"
 
 [package.extras]
 docs = ["sphinx (>=3)", "sphinx-argparse (>=0.2.5)", "sphinx-rtd-theme (>=0.4.3)", "towncrier (>=19.9.0rc1)", "proselint (>=0.10.2)"]
@@ -557,8 +586,8 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "8d37bb8660cd3a7d02c6adc8d2a27c626656081cf77c6d41d06518fcf57658cc"
-python-versions = "^3.7"
+content-hash = "f96cd1e493d2baca1645fd6cb05e1c8322a18e97c7740c7fe40bf9f47be7853d"
+python-versions = "^3.6.1"
 
 [metadata.files]
 appdirs = [
@@ -610,12 +639,12 @@ filelock = [
     {file = "filelock-3.0.12.tar.gz", hash = "sha256:18d82244ee114f543149c66a6e0c14e9c4f8a1044b5cdaadd0f82159d6a6ff59"},
 ]
 flake8 = [
-    {file = "flake8-3.8.1-py2.py3-none-any.whl", hash = "sha256:6c1193b0c3f853ef763969238f6c81e9e63ace9d024518edc020d5f1d6d93195"},
-    {file = "flake8-3.8.1.tar.gz", hash = "sha256:ea6623797bf9a52f4c9577d780da0bb17d65f870213f7b5bcc9fca82540c31d5"},
+    {file = "flake8-3.8.2-py2.py3-none-any.whl", hash = "sha256:ccaa799ef9893cebe69fdfefed76865aeaefbb94cb8545617b2298786a4de9a5"},
+    {file = "flake8-3.8.2.tar.gz", hash = "sha256:c69ac1668e434d37a2d2880b3ca9aafd54b3a10a3ac1ab101d22f29e29cf8634"},
 ]
 identify = [
-    {file = "identify-1.4.15-py2.py3-none-any.whl", hash = "sha256:88ed90632023e52a6495749c6732e61e08ec9f4f04e95484a5c37b9caf40283c"},
-    {file = "identify-1.4.15.tar.gz", hash = "sha256:23c18d97bb50e05be1a54917ee45cc61d57cb96aedc06aabb2b02331edf0dbf0"},
+    {file = "identify-1.4.17-py2.py3-none-any.whl", hash = "sha256:ef6fa3d125c27516f8d1aaa2038c3263d741e8723825eb38350cdc0288ab35eb"},
+    {file = "identify-1.4.17.tar.gz", hash = "sha256:be66b9673d59336acd18a3a0e0c10d35b8a780309561edf16c46b6b74b83f6af"},
 ]
 idna = [
     {file = "idna-2.9-py2.py3-none-any.whl", hash = "sha256:a068a21ceac8a4d63dbfd964670474107f541babbd2250d61922f029858365fa"},
@@ -624,6 +653,10 @@ idna = [
 importlib-metadata = [
     {file = "importlib_metadata-1.6.0-py2.py3-none-any.whl", hash = "sha256:2a688cbaa90e0cc587f1df48bdc97a6eadccdcd9c35fb3f976a09e3b5016d90f"},
     {file = "importlib_metadata-1.6.0.tar.gz", hash = "sha256:34513a8a0c4962bc66d35b359558fd8a5e10cd472d37aec5f66858addef32c1e"},
+]
+importlib-resources = [
+    {file = "importlib_resources-1.5.0-py2.py3-none-any.whl", hash = "sha256:85dc0b9b325ff78c8bef2e4ff42616094e16b98ebd5e3b50fe7e2f0bbcdcde49"},
+    {file = "importlib_resources-1.5.0.tar.gz", hash = "sha256:6f87df66833e1942667108628ec48900e02a4ab4ad850e25fbf07cb17cf734ca"},
 ]
 mccabe = [
     {file = "mccabe-0.6.1-py2.py3-none-any.whl", hash = "sha256:ab8a6258860da4b6677da4bd2fe5dc2c659cff31b3ee4f7f5d64e79735b80d42"},
@@ -645,8 +678,8 @@ oauthlib = [
     {file = "oauthlib-3.1.0.tar.gz", hash = "sha256:bee41cc35fcca6e988463cacc3bcb8a96224f470ca547e697b604cc697b2f889"},
 ]
 packaging = [
-    {file = "packaging-20.3-py2.py3-none-any.whl", hash = "sha256:82f77b9bee21c1bafbf35a84905d604d5d1223801d639cf3ed140bd651c08752"},
-    {file = "packaging-20.3.tar.gz", hash = "sha256:3c292b474fda1671ec57d46d739d072bfd495a4f51ad01a055121d81e952b7a3"},
+    {file = "packaging-20.4-py2.py3-none-any.whl", hash = "sha256:998416ba6962ae7fbd6596850b80e17859a5753ba17c32284f67bfff33784181"},
+    {file = "packaging-20.4.tar.gz", hash = "sha256:4357f74f47b9c12db93624a82154e9b120fa8293699949152b22065d556079f8"},
 ]
 pathspec = [
     {file = "pathspec-0.8.0-py2.py3-none-any.whl", hash = "sha256:7d91249d21749788d07a2d0f94147accd8f845507400749ea19c1ec9054a12b0"},
@@ -744,8 +777,8 @@ requests-oauthlib = [
     {file = "requests_oauthlib-1.3.0-py3.7.egg", hash = "sha256:fa6c47b933f01060936d87ae9327fead68768b69c6c9ea2109c48be30f2d4dbc"},
 ]
 six = [
-    {file = "six-1.14.0-py2.py3-none-any.whl", hash = "sha256:8f3cd2e254d8f793e7f3d6d9df77b92252b52637291d0f0da013c76ea2724b6c"},
-    {file = "six-1.14.0.tar.gz", hash = "sha256:236bdbdce46e6e6a3d61a337c0f8b763ca1e8717c03b369e87a7ec7ce1319c0a"},
+    {file = "six-1.15.0-py2.py3-none-any.whl", hash = "sha256:8b74bedcbbbaca38ff6d7491d76f2b06b3592611af620f8426e82dddb04a5ced"},
+    {file = "six-1.15.0.tar.gz", hash = "sha256:30639c035cdb23534cd4aa2dd52c3bf48f06e5f4a941509c8bafd8ce11080259"},
 ]
 soupsieve = [
     {file = "soupsieve-1.9.6-py2.py3-none-any.whl", hash = "sha256:feb1e937fa26a69e08436aad4a9037cd7e1d4c7212909502ba30701247ff8abd"},
@@ -786,8 +819,8 @@ urwid = [
     {file = "urwid-2.1.0.tar.gz", hash = "sha256:0896f36060beb6bf3801cb554303fef336a79661401797551ba106d23ab4cd86"},
 ]
 virtualenv = [
-    {file = "virtualenv-20.0.20-py2.py3-none-any.whl", hash = "sha256:b4c14d4d73a0c23db267095383c4276ef60e161f94fde0427f2f21a0132dde74"},
-    {file = "virtualenv-20.0.20.tar.gz", hash = "sha256:fd0e54dec8ac96c1c7c87daba85f0a59a7c37fe38748e154306ca21c73244637"},
+    {file = "virtualenv-20.0.21-py2.py3-none-any.whl", hash = "sha256:a730548b27366c5e6cbdf6f97406d861cccece2e22275e8e1a757aeff5e00c70"},
+    {file = "virtualenv-20.0.21.tar.gz", hash = "sha256:a116629d4e7f4d03433b8afa27f43deba09d48bc48f5ecefa4f015a178efb6cf"},
 ]
 wcwidth = [
     {file = "wcwidth-0.1.9-py2.py3-none-any.whl", hash = "sha256:cafe2186b3c009a04067022ce1dcd79cb38d8d65ee4f4791b8888d6599d1bbe1"},
