@@ -1,8 +1,14 @@
 [tool.poetry]
 name = "gwbridge"
-version = "0.1.0"
-description = "GitHub WordPress Bridge is a program to handle continuous deployment of blog content hosted on github to a wordpress blog"
+version = "1.0.0"
+description = "Publishes markdown content to a Wordpress blog"
 authors = ["Samuel Dowling <samuel.dowling@protonmail.com>"]
+readme = "README.md"
+license = "GPL-3.0-only"
+homepage = "https://github.com/samuel-emrys/gwbridge"
+classifiers = [
+	"Programming Language :: Python :: 3"
+]
 packages = [
 	{include = "gwbridge", from = "src"},
 ]
