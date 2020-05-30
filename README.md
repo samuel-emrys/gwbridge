@@ -1,3 +1,5 @@
+![](https://github.com/samuel_emrys/gwbridge/workflows/Build/badge.svg)
+
 # GitHub Wordpress Bridge
 
 gwbridge is a program that manages the continuous deployment of markdown content on GitHub to a WordPress blog.
