@@ -14,6 +14,8 @@ from gwbridge import METADATA_FILE
 
 
 def publish(**kwargs):
+    """Publish a markdown file to a wordpress blog
+    """
 
     config = parse_args(**kwargs)
 
@@ -92,6 +94,10 @@ def publish(**kwargs):
 
 
 def create_blank_post(url, oauth):
+    """ Create a blank post on the wordpress blog. This is executed to obtain
+    a post id with which images can be uploaded, and the post can be update
+    with correct content
+    """
 
     payload = {
         "date": datetime.datetime.now(),
@@ -118,6 +124,10 @@ def create_blank_post(url, oauth):
 
 
 def parse_document(data, config, metadata, oauth):
+    """Prepare the document to be published on Wordpress. This involves
+    extracting the title, uploading the relevant images, and changing
+    the links to these images to match those on the Wordpress site
+    """
     html = pypandoc.convert_text(data, "html", format="md")
     soup = BeautifulSoup(html, "html.parser")
     title = extract_title(soup)
@@ -155,6 +165,8 @@ def get_image_replacement_map(soup, media_url, post_id, oauth):
 
 
 def upload_images(img_map, media_url, oauth):
+    """Upload images in the blog post to the Wordpress server
+    """
 
     for filename, img in img_map.items():
         if img.get("target_path") is None:
@@ -173,6 +185,9 @@ def upload_images(img_map, media_url, oauth):
 
 
 def get_existing_images(media_url, oauth):
+    """Obtain a dictionary of all images currently uploaded to the Wordpress
+    server to work out what isn't already there and needs to be uploaded
+    """
 
     response = requests.get(media_url, auth=oauth)
     images = json.loads(response.text)
@@ -186,6 +201,9 @@ def get_existing_images(media_url, oauth):
 
 
 def extract_title(soup):
+    """ Determine the title of the blog post, and remove it from the body of
+    the content
+    """
 
     title = soup.h1.string
     soup.h1.extract()
@@ -194,6 +212,9 @@ def extract_title(soup):
 
 
 def replace_image_links(soup, img_map):
+    """Replace all links to images within a blog post with the new link
+    of the uploaded image
+    """
 
     for filename, img in img_map.items():
         matches = soup.find_all(src=img.get("local_path"))
@@ -202,6 +223,10 @@ def replace_image_links(soup, img_map):
 
 
 def parse_args(**kwargs):
+    """Merge the input arguments with the parameters in the configuration file
+    if the project has been initialised. This prioritises the arguments passed
+    from the command line over those in the configuration file.
+    """
 
     if os.path.exists(CONFIG_FILE):
         with open(CONFIG_FILE, "r") as f:
@@ -217,6 +242,8 @@ def parse_args(**kwargs):
 
 
 def construct_url(base_url, api_version, endpoint, post_id=None):
+    """Constructs a URL based on various parameters the Wordpress API takes
+    """
 
     if not post_id:
         url = "{}/{}/{}".format(base_url, api_version, endpoint)
@@ -226,6 +253,8 @@ def construct_url(base_url, api_version, endpoint, post_id=None):
 
 
 def authenticate(**kwargs):
+    """Obtain the credentials necessary to interact with a Wordpress server using OAuth1.0
+    """
 
     config = parse_args(**kwargs)
     authentication_urls = discover_auth_endpoints(**config)
@@ -264,6 +293,8 @@ def authenticate(**kwargs):
 
 
 def discover_auth_endpoints(**kwargs):
+    """Identify the OAuth1.0 endpoints, required to follow the authorization flow
+    """
     r = requests.get(kwargs.get("base_url"))
     response = json.loads(r.content.decode("utf-8"))
 
@@ -283,6 +314,10 @@ def discover_auth_endpoints(**kwargs):
 
 
 def init(**kwargs):
+    """Initialise a directory as a project. This creates a `.deploy` folder
+    containing configuration files for the site, and post metadata.
+    """
+
     default_config_dir = os.path.join(ROOT_DIR, "config")
     deploy_dir = ".deploy"
 
