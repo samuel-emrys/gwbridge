@@ -17,6 +17,7 @@ def publish(**kwargs):
     """Publish a markdown file to a wordpress blog
     """
 
+    # Consolidate cli args with config file
     config = parse_args(**kwargs)
 
     oauth = OAuth1(
@@ -26,6 +27,7 @@ def publish(**kwargs):
         resource_owner_secret=config.get("resource_owner_secret", None),
     )
 
+    # Read markdown file contents
     with open(config.get("file"), "r") as f:
         data = f.read()
 
@@ -40,6 +42,8 @@ def publish(**kwargs):
             api_version=config.get("api_version"),
             endpoint="posts",
         )
+
+        # Create a blank post to obtain a post id
         metadata["id"] = create_blank_post(url, oauth)
 
         # Update the repository metadata file with new post ID. This change
@@ -49,6 +53,8 @@ def publish(**kwargs):
 
     if metadata.get("id", None):
         print("Pushing new content...")
+
+        # Transform content into a form appropriate for wordpress
         document = parse_document(data, config, metadata, oauth)
         payload = {
             "date": datetime.datetime.now(),
@@ -61,8 +67,11 @@ def publish(**kwargs):
             endpoint="posts",
             post_id=metadata.get("id"),
         )
+
+        # Push new blog content
         response = requests.post(url, data=payload, auth=oauth)
 
+        # If blog successfully published
         if response.status_code == 200:
             response_dict = json.loads(response.text)
 
@@ -170,6 +179,8 @@ def upload_images(img_map, media_url, oauth):
 
     for filename, img in img_map.items():
         if img.get("target_path") is None:
+
+            # Read local image data in
             with open(img.get("local_path"), "rb") as f:
                 data = f.read()
 
@@ -177,7 +188,10 @@ def upload_images(img_map, media_url, oauth):
                 "Content-Type": mimetypes.guess_type(img.get("local_path"))[0],
                 "Content-Disposition": "attachment; filename={}".format(filename),
             }
+            # Upload image data with filename as specified in header
             response = requests.post(media_url, data=data, headers=headers, auth=oauth,)
+
+            # Record the resulting URL from the image upload
             new_src = json.loads(response.text).get("guid").get("rendered")
             img_map[filename]["target_path"] = new_src
 
@@ -254,10 +268,14 @@ def construct_url(base_url, api_version, endpoint, post_id=None):
 
 def authenticate(**kwargs):
     """Obtain the credentials necessary to interact with a Wordpress server using OAuth1.0
+    Workflow based on examples available at: https://requests-oauthlib.readthedocs.io/en/latest/oauth1_workflow.html
     """
 
+    # 0. Load client_key and client_secret from input arguments
     config = parse_args(**kwargs)
     authentication_urls = discover_auth_endpoints(**config)
+
+    # 1. Obtain request token to identify client in the next step
     oauth = OAuth1(
         client_key=config.get("client_key"), client_secret=config.get("client_secret"),
     )
@@ -266,12 +284,17 @@ def authenticate(**kwargs):
     resource_owner_key = credentials.get("oauth_token")[0]
     resource_owner_secret = credentials.get("oauth_token_secret")[0]
 
+    # 2. Obtain authorization from the user (resource owner) to access their
+    # blog by redirecting them to a verification URL
     print(
         "Authenticate at the following URL to obtain a verification token: {}?oauth_token={}".format(
             authentication_urls.get("authorize"), resource_owner_key
         )
     )
     verifier = input("Enter the verification token: ")
+
+    # 3. Use the verification token to obtain an access token from the OAuth
+    # server.
 
     oauth = OAuth1(
         client_key=config.get("client_key"),
@@ -285,6 +308,10 @@ def authenticate(**kwargs):
     credentials = parse_qs(r.content.decode("utf-8"))
     resource_owner_key = credentials.get("oauth_token")[0]
     resource_owner_secret = credentials.get("oauth_token_secret")[0]
+
+    # 4. These credentials don't expire, and can now be used to access the
+    # protected resources of the Wordpress server. These should be used as
+    # environment variables for the CI/CD tool.
 
     print("{:25}{}".format("Client key", config.get("client_key")))
     print("{:25}{}".format("Client secret", config.get("client_secret")))
@@ -322,6 +349,7 @@ def init(**kwargs):
     deploy_dir = ".deploy"
 
     try:
+        # Create a `.deploy` directory in the project root
         os.makedirs(deploy_dir, exist_ok=False)
     except FileExistsError:
         rewrite = (
