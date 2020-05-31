@@ -96,6 +96,7 @@ def publish(**kwargs):
                     str(response.status_code)
                 )
             )
+            print(response.text)
     else:
         print("Something went wrong. Content not updated.")
 
