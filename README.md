@@ -1,4 +1,4 @@
-![](https://github.com/samuel_emrys/gwbridge/workflows/Build/badge.svg)
+![Build](https://github.com/samuel-emrys/gwbridge/workflows/Build/badge.svg)
 
 # GitHub Wordpress Bridge
 
