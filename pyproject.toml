@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "gwbridge"
-version = "1.0.0"
+version = "1.0.2"
 description = "Publishes markdown content to a Wordpress blog"
 authors = ["Samuel Dowling <samuel.dowling@protonmail.com>"]
 readme = "README.md"
