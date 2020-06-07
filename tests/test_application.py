@@ -134,19 +134,11 @@ def test_parse_document(
 
     metadata = {
         "id": "254",
-        "slug": "this is a slug",
         "status": "draft",
         "author": 1,
-        "excerpt": "",
-        "featured_media": "",
         "comment_status": "open",
         "ping_status": "closed",
         "format": "standard",
-        "meta": "",
-        "sticky": "",
-        "template": "",
-        "categories": "",
-        "tags": "",
     }
     media_url = "https://www.example.com/wp-json/wp/v2/media"
     posts_url = "https://www.example.com/wp-json/wp/v2/posts"

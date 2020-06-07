@@ -76,12 +76,6 @@ def publish(**kwargs):
             response_dict = json.loads(response.text)
 
             # Update relevant metadata from response
-            metadata["slug"] = response_dict.get("slug", "")
-            metadata["excerpt"] = response_dict.get("excerpt", {}).get("rendered", "")
-            metadata["featured_media"] = response_dict.get("featured_media", 0)
-            metadata["sticky"] = response_dict.get("sticky", False)
-            metadata["categories"] = response_dict.get("categories", [])
-            metadata["tags"] = response_dict.get("tags", [])
             with open(METADATA_FILE, "w") as f:
                 f.write(json.dumps(metadata, indent=4))
 
@@ -111,21 +105,13 @@ def create_blank_post(url, oauth):
 
     payload = {
         "date": datetime.datetime.now(),
-        "slug": "",
         "status": "draft",
         "title": "placeholder",
         "content": "placeholder",
         "author": 1,
-        "excerpt": None,
-        "featured_media": None,
         "comment_status": "open",
         "ping_status": "closed",
         "format": "standard",
-        "meta": None,
-        "sticky": None,
-        "template": None,
-        "categories": None,
-        "tags": None,
     }
 
     response = requests.post(url, data=payload, auth=oauth)

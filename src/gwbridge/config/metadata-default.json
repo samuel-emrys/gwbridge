@@ -1,15 +1,8 @@
 {
 	"id": "",
-	"slug": "",
 	"status": "draft",
 	"author": 1,
-	"excerpt": "",
-	"featured_media": 0,
 	"comment_status": "open",
 	"ping_status": "closed",
-	"format": "standard",
-	"sticky": false,
-	"template": "",
-	"categories": "",
-	"tags": ""
+	"format": "standard"
 }
